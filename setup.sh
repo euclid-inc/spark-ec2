@@ -39,10 +39,10 @@ if [[ "x$SCALA_HOME" == "x" ]] ; then
     exit 1
 fi
 
-if [[ `tty` == "not a tty" ]] ; then
-    echo "Expecting a tty or pty! (use the ssh -t option)."
-    exit 1
-fi
+# if [[ `tty` == "not a tty" ]] ; then
+#     echo "Expecting a tty or pty! (use the ssh -t option)."
+#     exit 1
+# fi
 
 echo "Setting executable permissions on scripts..."
 find . -regex "^.+.\(sh\|py\)" | xargs chmod a+x
@@ -98,7 +98,7 @@ wait
 echo "Running slave setup script on other cluster nodes..."
 for node in $SLAVES $OTHER_MASTERS; do
   echo $node
-  ssh -t -t $SSH_OPTS root@$node "spark-ec2/setup-slave.sh" & sleep 0.3
+  ssh $SSH_OPTS root@$node "spark-ec2/setup-slave.sh" & sleep 0.3
 done
 wait
 
