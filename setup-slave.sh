@@ -40,29 +40,48 @@ fi
 # are ext3, but we use xfs for EBS volumes to format them faster)
 XFS_MOUNT_OPTS="defaults,noatime,nodiratime,allocsize=8m"
 
-# Format and mount EBS volume (/dev/sdv) as /vol if the device exists
-if [[ -e /dev/sdv ]]; then
-  # Check if /dev/sdv is already formatted
-  if ! blkid /dev/sdv; then
-    mkdir /vol
-    yum install -q -y xfsprogs
-    if mkfs.xfs -q /dev/sdv; then
-      mount -o $XFS_MOUNT_OPTS /dev/sdv /vol
-      chmod -R a+w /vol
+function setup_ebs_volume {
+  device=$1
+  mount_point=$2
+  if [[ -e $device ]]; then
+    # Check if device is already formatted
+    if ! blkid $device; then
+      mkdir $mount_point
+      yum install -q -y xfsprogs
+      if mkfs.xfs -q $device; then
+        mount -o $XFS_MOUNT_OPTS $device $mount_point
+        chmod -R a+w $mount_point
+      else
+        # mkfs.xfs is not installed on this machine or has failed;
+        # delete /vol so that the user doesn't think we successfully
+        # mounted the EBS volume
+        rmdir $mount_point
+      fi
     else
-      # mkfs.xfs is not installed on this machine or has failed;
-      # delete /vol so that the user doesn't think we successfully
-      # mounted the EBS volume
-      rmdir /vol
-    fi
-  else
-    # EBS volume is already formatted. Mount it if its not mounted yet.
-    if ! grep -qs '/vol' /proc/mounts; then
-      mkdir /vol
-      mount -o $XFS_MOUNT_OPTS /dev/sdv /vol
-      chmod -R a+w /vol
+      # EBS volume is already formatted. Mount it if its not mounted yet.
+      if ! grep -qs '$mount_point' /proc/mounts; then
+        mkdir $mount_point
+        mount -o $XFS_MOUNT_OPTS $device $mount_point
+        chmod -R a+w $mount_point
+      fi
     fi
   fi
+}
+
+# Format and mount EBS volume (/dev/sd[s, t, u, v, w, x, y, z]) as /vol[x] if the device exists
+setup_ebs_volume /dev/sds /vol0
+setup_ebs_volume /dev/sdt /vol1
+setup_ebs_volume /dev/sdu /vol2
+setup_ebs_volume /dev/sdv /vol3
+setup_ebs_volume /dev/sdw /vol4
+setup_ebs_volume /dev/sdx /vol5
+setup_ebs_volume /dev/sdy /vol6
+setup_ebs_volume /dev/sdz /vol7
+
+# Alias vol to vol3 for backward compatibility: the old spark-ec2 script supports only attaching
+# one EBS volume at /dev/sdv.
+if [[ -e /vol3 && ! -e /vol ]]; then
+  ln -s /vol3 /vol
 fi
 
 # Make data dirs writable by non-root users, such as CDH's hadoop user
