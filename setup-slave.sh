@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Disable Transparent Huge Pages (THP)
+# THP can result in system thrashing (high sys usage) due to frequent defrags of memory.
+# Most systems recommends turning THP off.
+if [[ -e /sys/kernel/mm/transparent_hugepage/enabled ]]; then
+  echo never > /sys/kernel/mm/transparent_hugepage/enabled
+fi
+
 # Make sure we are in the spark-ec2 directory
 cd /root/spark-ec2
 
@@ -100,3 +107,10 @@ echo 1 > /proc/sys/vm/overcommit_memory
 # Add github to known hosts to get git@github.com clone to work
 # TODO(shivaram): Avoid duplicate entries ?
 cat /root/spark-ec2/github.hostkey >> /root/.ssh/known_hosts
+
+# Create /usr/bin/realpath which is used by R to find Java installations
+# NOTE: /usr/bin/realpath is missing in CentOS AMIs. See
+# http://superuser.com/questions/771104/usr-bin-realpath-not-found-in-centos-6-5
+echo '#!/bin/bash' > /usr/bin/realpath
+echo 'readlink -e "$@"' >> /usr/bin/realpath
+chmod a+x /usr/bin/realpath
