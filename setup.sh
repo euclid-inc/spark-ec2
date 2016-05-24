@@ -11,12 +11,15 @@ source ec2-variables.sh
 
 # Set hostname based on EC2 private DNS name, so that it is set correctly
 # even if the instance is restarted with a different private DNS name
+sudo su -
 PRIVATE_DNS=`wget -q -O - http://instance-data.ec2.internal/latest/meta-data/local-hostname`
 PUBLIC_DNS=`wget -q -O - http://instance-data.ec2.internal/latest/meta-data/hostname`
 sudo hostname $PRIVATE_DNS
 sudo echo $PRIVATE_DNS > /etc/hostname
 export HOSTNAME=$PRIVATE_DNS  # Fix the bash built-in hostname variable too
 
+sudo su - ec2user
+cd ~/spark-ec2
 echo "Setting up Spark on `hostname`..."
 
 # Set up the masters, slaves, etc files based on cluster env variables
