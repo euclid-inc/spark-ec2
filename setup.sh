@@ -7,6 +7,7 @@ cd ~/spark-ec2
 source ~/.bash_profile
 
 # Load the cluster variables set by the deploy script
+chmod 777 ec2-variables.sh
 source ec2-variables.sh
 
 # Set hostname based on EC2 private DNS name, so that it is set correctly
