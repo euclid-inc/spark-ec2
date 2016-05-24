@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Make sure we are in the spark-ec2 directory
-cd /ec2-user/spark-ec2
+cd ~/spark-ec2
 
 # Load the environment variables specific to this AMI
-source /ec2-user/.bash_profile
+source ~/.bash_profile
 
 # Load the cluster variables set by the deploy script
 source ec2-variables.sh
